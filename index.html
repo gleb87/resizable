@@ -3,6 +3,58 @@
 <head>
   <meta charset="utf-8">
   <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <style>
+  .resizeable-elem {
+  	display: block;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+  }
+
+  .resizeable-container {
+  	position: relative;
+  	margin: 0;
+  	padding: 0;
+  }
+
+  .resizeable-handle-width {
+  	position: absolute;
+  	top: 0px;
+  	width: 3px;
+  	z-index: 90;
+
+  	margin: 0;
+  	padding: 0;
+  	background-color: grey;
+  	cursor: ew-resize;
+  }
+
+  .resizeable-handle-height {
+  	position: absolute;
+  	left: 0px;
+  	height: 3px;
+  	z-index: 90;
+
+  	margin: 0;
+  	padding: 0;
+  	background-color: grey;
+  	cursor: ns-resize;
+  }
+
+  .resizeable-handle-all {
+  	position: absolute;
+  	height: 16px;
+  	width: 16px;
+  	z-index: 100;
+
+  	margin: 0;
+  	padding: 0;
+  	background-image: url("handle-se.png");
+  	cursor: nwse-resize;
+  }
+
+
+  </style>
 </head>
 <body>
 
@@ -13,6 +65,55 @@
 <script>
 function Resizeable(options) {
   /* ваш код */
+  var $elem = $(options.elem);
+  $elem.addClass("resizeable-elem");
+
+  var $resizeWidthHandle = $("<div/>", {
+  	"class": "resizeable-handle-width",
+  });
+
+  var $resizeHeightHandle = $("<div/>", {
+  	"class": "resizeable-handle-height",
+  });
+
+  var $resizeAllHandle = $("<div/>", {
+  	"class": "resizeable-handle-all",
+  });
+
+  var $container = $("<div/>", {
+  	"class": "resizeable-container",
+  }).appendTo($elem.parent())
+  .append([$elem,
+  $resizeWidthHandle,
+  $resizeHeightHandle,
+  $resizeAllHandle])
+  .on("selectstart mousedown dragstart", false);
+
+  resizeTo($elem.width(), $elem.height());
+
+  function resizeTo(w, h) {
+  	$elem.width(w);
+  	$elem.height(h);
+
+  	$container.width( w + $resizeWidthHandle.width() );
+  	$container.height( h + $resizeHeightHandle.height() );
+
+  	$resizeWidthHandle.height( $container.height() );
+  	$resizeWidthHandle.css({
+  		left: w,
+  	});
+
+  	$resizeHeightHandle.width( $container.width() );
+  	$resizeHeightHandle.css({
+  		top: h,
+  	});
+
+  	$resizeAllHandle.css({
+  		left: $container.width() - $resizeAllHandle.width(),
+  		top: $container.height() - $resizeAllHandle.height(),
+  	});
+  }
+
 }
 
 var resizeMe = new Resizeable({
