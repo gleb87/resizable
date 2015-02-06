@@ -20,7 +20,9 @@
   .resizeable-handle-width {
   	position: absolute;
   	top: 0px;
+    right: 0px;
   	width: 3px;
+    height: 100%;
   	z-index: 90;
 
   	margin: 0;
@@ -32,6 +34,8 @@
   .resizeable-handle-height {
   	position: absolute;
   	left: 0px;
+    bottom: 0px;
+    width: 100%;
   	height: 3px;
   	z-index: 90;
 
@@ -43,9 +47,12 @@
 
   .resizeable-handle-all {
   	position: absolute;
+    right: 0px;
+    bottom: 0px;
+    z-index: 100;
+
   	height: 16px;
   	width: 16px;
-  	z-index: 100;
 
   	margin: 0;
   	padding: 0;
@@ -65,6 +72,8 @@
 <script>
 function Resizeable(options) {
   /* ваш код */
+  var self = this;
+
   var $elem = $(options.elem);
   $elem.addClass("resizeable-elem");
 
@@ -82,14 +91,83 @@ function Resizeable(options) {
 
   var $container = $("<div/>", {
   	"class": "resizeable-container",
-  }).appendTo($elem.parent())
+  }).insertBefore($elem)
   .append([$elem,
   $resizeWidthHandle,
   $resizeHeightHandle,
   $resizeAllHandle])
-  .on("selectstart mousedown dragstart", false);
+  .on("selectstart mousedown dragstart", false)
+  .on("mousedown", ".resizeable-handle-width", onHandleWidthMousedown)
+  .on("mousedown", ".resizeable-handle-height", onHandleHeightMousedown)
+  .on("mousedown", ".resizeable-handle-all", onHandleAllMousedown);
+
 
   resizeTo($elem.width(), $elem.height());
+
+  function onHandleWidthMousedown() {
+    startResizeWidth();
+  }
+
+  function onHandleHeightMousedown() {
+    startResizeHeight();
+  }
+
+  function onHandleAllMousedown() {
+    startResizeAll();
+  }
+
+  function startResizeWidth() {
+    $(document).on("mousemove.resize", onMousemoveResizeWidth)
+    .on("mouseup.resize", onMouseupResize);
+  }
+
+  function startResizeHeight() {
+    $(document).on("mousemove.resize", onMousemoveResizeHeight)
+    .on("mouseup.resize", onMouseupResize);
+  }
+
+  function startResizeAll() {
+    $(document).on("mousemove.resize", onMousemoveResizeAll)
+    .on("mouseup.resize", onMouseupResize);
+  }
+
+  function endResize() {
+    $(document).off(".resize");
+
+    $(self).triggerHandler({
+      type: "resize",
+      newWidth: $elem.width(),
+      newHeight: $elem.height(),
+    });
+  }
+
+  function onMousemoveResizeWidth(e) {
+    var newWidth = e.pageX - $elem.offset().left;
+    if (newWidth < 3) newWidth = 3;
+
+    resizeTo( newWidth, $elem.height() );
+  }
+
+  function onMousemoveResizeHeight(e) {
+    var newHeight = e.pageY - $elem.offset().top;
+    if (newHeight < 3) newHeight = 3;
+
+    resizeTo( $elem.width(), newHeight );
+  }
+
+  function onMousemoveResizeAll(e) {
+    var newWidth = e.pageX - $elem.offset().left;
+    var newHeight = e.pageY - $elem.offset().top;
+
+    if (newHeight < 3) newHeight = 3;
+    if (newWidth < 3) newWidth = 3;
+
+    resizeTo( newWidth, newHeight );
+  }
+
+  function onMouseupResize() {
+    endResize();
+  }
 
   function resizeTo(w, h) {
   	$elem.width(w);
@@ -97,23 +175,7 @@ function Resizeable(options) {
 
   	$container.width( w + $resizeWidthHandle.width() );
   	$container.height( h + $resizeHeightHandle.height() );
-
-  	$resizeWidthHandle.height( $container.height() );
-  	$resizeWidthHandle.css({
-  		left: w,
-  	});
-
-  	$resizeHeightHandle.width( $container.width() );
-  	$resizeHeightHandle.css({
-  		top: h,
-  	});
-
-  	$resizeAllHandle.css({
-  		left: $container.width() - $resizeAllHandle.width(),
-  		top: $container.height() - $resizeAllHandle.height(),
-  	});
   }
-
 }
 
 var resizeMe = new Resizeable({
